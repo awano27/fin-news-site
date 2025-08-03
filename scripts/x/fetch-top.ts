@@ -45,6 +45,9 @@ const PER_ACCOUNT_LIMIT = parseInt(process.env.PER_ACCOUNT_LIMIT || '5', 10);
 // クリーンモード: ダミー（example.com）や特定ID（sns-10..14）を取り込み前に削除
 const CLEAN_MODE = (process.env.CLEAN_MODE || 'true').toLowerCase() !== 'false';
 
+// 企業優先モード（trueで issuer=withIssuer を優先し、決算/開示系のtypeのみ追加）
+const COMPANY_PRIORITY = (process.env.COMPANY_PRIORITY || 'false').toLowerCase() === 'true';
+
 async function main() {
   assertFileExistsOrThrow(STORAGE_PATH, `storageState がありません。先に npm run pw:login を実行してログイン状態を保存してください: ${STORAGE_PATH}`);
   assertFileExistsOrThrow(NEWS_JSON, `news.json が見つかりません: ${NEWS_JSON}`);

@@ -42,6 +42,37 @@
       掲載ルール: 実際にアクセス可能で内容確認済みのソースのみを掲載（整合性100%）
     </section>
 
+    <!-- 追加: MECEフィルタUI -->
+    <section class="notice" aria-label="MECEフィルタ">
+      <form id="mece-filters" style="display:flex;flex-wrap:wrap;gap:8px;align-items:center">
+        <label>
+          種別:
+          <select id="type-filter">
+            <option value="all">すべて</option>
+            <option value="earnings">earnings（決算）</option>
+            <option value="disclosure">disclosure（開示/IR）</option>
+            <option value="fx">fx（為替）</option>
+            <option value="macro">macro（マクロ/指標/政策）</option>
+            <option value="equityIndex">equityIndex（株価指数）</option>
+            <option value="companyNews">companyNews（企業系）</option>
+            <option value="marketNews">marketNews（市場系）</option>
+          </select>
+        </label>
+        <label>
+          発行体:
+          <select id="issuer-filter">
+            <option value="all">すべて</option>
+            <option value="withIssuer">企業固有</option>
+            <option value="noIssuer">市場/マクロ</option>
+          </select>
+        </label>
+        <label style="display:inline-flex;align-items:center;gap:6px">
+          <input id="dedupe-toggle" type="checkbox" checked />
+          重複抑止
+        </label>
+      </form>
+    </section>
+
     <section id="cards" class="cards" aria-label="ニュース一覧">
       <!-- JSでカードを描画 -->
     </section>
@@ -61,6 +92,44 @@
     </div>
   </footer>
 
+  <script>
+    // フィルタUIとapp.jsの状態同期
+    window.addEventListener('DOMContentLoaded', () => {
+      const typeSel = document.getElementById('type-filter');
+      const issuerSel = document.getElementById('issuer-filter');
+      const dedupeCk = document.getElementById('dedupe-toggle');
+      window.__NEWS_SET = (patch) => {
+        // app.js 側の state を更新するための簡易ブリッジ（後方互換・安全策）
+        const ev = new CustomEvent('news:set', { detail: patch });
+        window.dispatchEvent(ev);
+      };
+      typeSel?.addEventListener('change', () => { window.__NEWS_SET && window.__NEWS_SET({ type: typeSel.value }); });
+      issuerSel?.addEventListener('change', () => { window.__NEWS_SET && window.__NEWS_SET({ issuer: issuerSel.value }); });
+      dedupeCk?.addEventListener('change', () => { window.__NEWS_SET && window.__NEWS_SET({ dedupe: dedupeCk.checked }); });
+    });
+  </script>
+  <script>
+    // セクションのピル操作で上部ナビのフィルタも同期
+    window.addEventListener('DOMContentLoaded', () => {
+      const syncFilter = (filter) => {
+        const ev = new CustomEvent('news:set', { detail: { filter } });
+        window.dispatchEvent(ev);
+      };
+      const ids = [
+        ['pill-all', 'all'],
+        ['pill-market', 'market'],
+        ['pill-company', 'company'],
+        ['pill-sns', 'sns'],
+      ];
+      ids.forEach(([id, f]) => {
+        const el = document.getElementById(id);
+        el && el.addEventListener('click', (e) => {
+          e.preventDefault();
+          syncFilter(f);
+        });
+      });
+    });
+  </script>
   <script src="assets/app.js" type="module"></script>
 </body>
 </html>

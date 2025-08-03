@@ -4,6 +4,9 @@ const state = {
   filter: 'all',
   query: '',
   sort: 'date_desc',
+  type: 'all',         // 追加: 種別フィルタ
+  issuer: 'all',       // 追加: 発行体（企業固有か）フィルタ
+  dedupe: true         // 追加: 重複抑止
 };
 
 const el = {
@@ -44,7 +47,7 @@ async function loadData(){
 }
 
 /**
- * アイテムの正規化
+ * アイテムの正規化 + MECE補助フィールド推定
  */
 function normalizeItem(x){
   const cat = ['market','company','sns'].includes(x.category) ? x.category : 'market';
@@ -58,6 +61,24 @@ function normalizeItem(x){
   const verified = x.verified !== false;
   const thumbnail = x.thumbnail || '';
 
+  // 新フィールド（任意）
+  let type = (x.type || '').toString();         // 'earnings' | 'disclosure' | 'macro' | 'fx' | 'equityIndex' | 'policy' | ...
+  const tickers = Array.isArray(x.tickers) ? x.tickers : []; // ['5401.T'] など
+
+  // typeが未指定の場合、タイトル・タグから推定（簡易ルール）
+  if(!type){
+    const t = (title + ' ' + summary + ' ' + tags.join(' ')).toLowerCase();
+    if(/決算|業績|通期|四半期|eps|売上|ガイダンス/.test(t)) type = 'earnings';
+    else if(/開示|適時開示|有報|短信|ir/.test(t)) type = 'disclosure';
+    else if(/為替|ドル円|usd\/jpy|fx/.test(t)) type = 'fx';
+    else if(/cpi|pmi|gdp|景気|マクロ|失業|物価|政策|日銀|fomc/.test(t)) type = 'macro';
+    else if(/日経平均|topix|sp500|指数|先物|オプション/.test(t)) type = 'equityIndex';
+    else type = cat === 'company' ? 'companyNews' : 'marketNews';
+  }
+
+  // issuer（発行体の有無）: company＝企業固有、market＝非企業、sns＝対象外
+  const issuer = cat === 'company' ? 'withIssuer' : 'noIssuer';
+
   return {
     id: x.id || cryptoRandomId(),
     category: cat,
@@ -69,7 +90,10 @@ function normalizeItem(x){
     tags,
     locale,
     verified,
-    thumbnail
+    thumbnail,
+    type,
+    tickers,
+    issuer
   };
 }
 
@@ -121,6 +145,16 @@ function applyFilter(items){
     out = out.filter(x => x.category === state.filter);
   }
 
+  // 種別フィルタ（type）
+  if(state.type !== 'all'){
+    out = out.filter(x => (x.type || '') === state.type);
+  }
+
+  // 発行体フィルタ（issuer）
+  if(state.issuer !== 'all'){
+    out = out.filter(x => (x.issuer || 'noIssuer') === state.issuer);
+  }
+
   // 検索（タイトル・要約・ソース・タグ）
   if(state.query){
     const q = state.query.toLowerCase();
@@ -129,9 +163,15 @@ function applyFilter(items){
         x.title.toLowerCase().includes(q) ||
         x.summary.toLowerCase().includes(q) ||
         x.source.toLowerCase().includes(q) ||
-        (x.tags||[]).some(t => (t||'').toLowerCase().includes(q))
+        (x.tags||[]).some(t => (t||'').toLowerCase().includes(q)) ||
+        (x.tickers||[]).some(t => (t||'').toLowerCase().includes(q))
       );
     });
+  }
+
+  // 重複抑止（URLベース + タイトル近似）
+  if(state.dedupe){
+    out = dedupeItems(out);
   }
 
   // 並び替え
@@ -153,6 +193,25 @@ function applyFilter(items){
   }
 
   return out;
+}
+
+function dedupeItems(arr){
+  const seenUrl = new Set();
+  const keep = [];
+  for(const it of arr){
+    const u = (it.url || '').trim();
+    const keyUrl = u.replace(/[#?].*$/, ''); // クエリ/ハッシュを除去して比較
+    const titleKey = (it.title || '').trim().toLowerCase().replace(/\s+/g,' ');
+    const urlHit = keyUrl && seenUrl.has(keyUrl);
+    const titleHit = keep.some(k => {
+      const t = (k.title||'').trim().toLowerCase().replace(/\s+/g,' ');
+      return t && titleKey && t === titleKey;
+    });
+    if(urlHit || titleHit) continue;
+    if(keyUrl) seenUrl.add(keyUrl);
+    keep.push(it);
+  }
+  return keep;
 }
 
 function render(){
@@ -190,6 +249,20 @@ function renderCard(item){
   catBadge.className = 'badge';
   catBadge.textContent = a11yCat;
   badges.appendChild(catBadge);
+
+  if(item.type){
+    const t = document.createElement('span');
+    t.className = 'badge';
+    t.textContent = item.type;
+    badges.appendChild(t);
+  }
+
+  if(item.issuer){
+    const iss = document.createElement('span');
+    iss.className = 'badge';
+    iss.textContent = item.issuer === 'withIssuer' ? '企業固有' : '市場/マクロ';
+    badges.appendChild(iss);
+  }
 
   if(item.verified){
     const v = document.createElement('span');
@@ -231,6 +304,14 @@ function renderCard(item){
     d.dateTime = item.publishedAt.toISOString();
     d.textContent = formatDate(item.publishedAt);
     meta.appendChild(d);
+  }
+
+  // tickersを軽く表示
+  if(Array.isArray(item.tickers) && item.tickers.length){
+    const tk = document.createElement('div');
+    tk.className = 'card-meta';
+    tk.textContent = `Ticker: ${item.tickers.slice(0,3).join(', ')}`;
+    body.appendChild(tk);
   }
 
   body.prepend(badges);
