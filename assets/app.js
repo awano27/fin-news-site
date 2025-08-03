@@ -6,7 +6,8 @@ const state = {
   sort: 'date_desc',
   type: 'all',         // 追加: 種別フィルタ
   issuer: 'all',       // 追加: 発行体（企業固有か）フィルタ
-  dedupe: true         // 追加: 重複抑止
+  dedupe: true,        // 追加: 重複抑止
+  onlyWithin24h: true  // 追加: 24時間以内に限定
 };
 
 const el = {
@@ -15,9 +16,28 @@ const el = {
   search: document.getElementById('search'),
   sort: document.getElementById('sort'),
   nav: document.querySelector('.nav'),
+  // 追加: メトリクス要素（存在すれば更新）
+  metrics: {
+    market: document.getElementById('metric-market'),
+    company: document.getElementById('metric-company'),
+    sns: document.getElementById('metric-sns'),
+    total: document.getElementById('metric-total'),
+    rating: document.getElementById('metric-rating')
+  }
 };
 
 init();
+
+// 外部（index.htmlの補助スクリプト）から state を部分更新するブリッジ
+window.addEventListener('news:set', (ev) => {
+  const patch = (ev && ev.detail) || {};
+  if ('filter' in patch) state.filter = patch.filter;
+  if ('type' in patch) state.type = patch.type;
+  if ('issuer' in patch) state.issuer = patch.issuer;
+  if ('dedupe' in patch) state.dedupe = !!patch.dedupe;
+  if ('onlyWithin24h' in patch) state.onlyWithin24h = !!patch.onlyWithin24h;
+  render();
+});
 
 async function init(){
   attachEvents();
@@ -38,7 +58,15 @@ async function loadData(){
     // 正常化とバリデーション（最低限）
     state.all = items
       .filter(x => x && x.url && x.verified !== false) // undefinedはtrue扱い、falseは除外
-      .map(x => normalizeItem(x));
+      .map(x => normalizeItem(x))
+      // 24時間以内のみに制限（初期設定: true）
+      .filter(x => {
+        if (!state.onlyWithin24h) return true;
+        if (!x.publishedAt) return false;
+        const now = new Date();
+        const diff = now.getTime() - x.publishedAt.getTime();
+        return diff >= 0 && diff <= 24 * 60 * 60 * 1000;
+      });
 
   }catch(err){
     console.error('データ読み込みエラー:', err);
@@ -140,6 +168,12 @@ function attachEvents(){
 function applyFilter(items){
   let out = items;
 
+  // 24時間以内の制御（ユーザーが切り替え可能なように二重で守る）
+  if (state.onlyWithin24h) {
+    const now = new Date();
+    out = out.filter(x => x.publishedAt && (now.getTime() - x.publishedAt.getTime()) <= 24*60*60*1000 && (now.getTime() - x.publishedAt.getTime()) >= 0);
+  }
+
   // カテゴリフィルタ
   if(state.filter !== 'all'){
     out = out.filter(x => x.category === state.filter);
@@ -216,6 +250,10 @@ function dedupeItems(arr){
 
 function render(){
   state.view = applyFilter(state.all);
+
+  // メトリクス更新
+  updateMetrics(state.view);
+
   el.cards.innerHTML = '';
   if(state.view.length === 0){
     el.empty.hidden = false;
@@ -228,6 +266,28 @@ function render(){
     frag.appendChild(renderCard(item));
   });
   el.cards.appendChild(frag);
+}
+
+function updateMetrics(view){
+  try{
+    const market = view.filter(x => x.category === 'market').length;
+    const company = view.filter(x => x.category === 'company').length;
+    const sns = view.filter(x => x.category === 'sns').length;
+    const total = view.length;
+
+    // 総合評価（例: 件数と新鮮度を併用した簡易評価）
+    let rating = '中';
+    if (total >= 20) rating = '高';
+    else if (total <= 5) rating = '低';
+
+    if (el.metrics.market) el.metrics.market.textContent = String(market);
+    if (el.metrics.company) el.metrics.company.textContent = String(company);
+    if (el.metrics.sns) el.metrics.sns.textContent = String(sns);
+    if (el.metrics.total) el.metrics.total.textContent = String(total);
+    if (el.metrics.rating) el.metrics.rating.textContent = rating;
+  }catch(e){
+    // メトリクスDOMがない環境でも壊さない
+  }
 }
 
 function renderCard(item){
@@ -255,6 +315,20 @@ function renderCard(item){
     t.className = 'badge';
     t.textContent = item.type;
     badges.appendChild(t);
+  }
+
+  // 重要度（簡易推定）と星表示
+  const importance = estimateImportance(item);
+  if (importance > 0) {
+    const imp = document.createElement('span');
+    imp.className = 'badge ' + (importance >= 4 ? 'impact-high' : importance >= 2 ? 'impact-mid' : 'impact-low');
+    imp.textContent = `重要度:${importance}`;
+    badges.appendChild(imp);
+
+    const stars = document.createElement('span');
+    stars.className = 'badge stars';
+    stars.textContent = '★'.repeat(importance) + '☆'.repeat(Math.max(0, 5 - importance));
+    badges.appendChild(stars);
   }
 
   if(item.issuer){
@@ -290,6 +364,37 @@ function renderCard(item){
     p.textContent = item.summary;
     body.appendChild(p);
   }
+  
+  // 簡易重要度評価ロジック（市場インパクト/投資判断影響度の代替スコア）
+  function estimateImportance(item){
+    try{
+      const now = new Date();
+      let score = 1;
+  
+      // カテゴリ寄与
+      if (item.category === 'market') score += 1;
+      if (item.category === 'company' && (item.type === 'earnings' || item.type === 'disclosure')) score += 2;
+  
+      // 種別の寄与
+      if (item.type === 'macro' || item.type === 'fx' || item.type === 'equityIndex') score += 2;
+      if (item.type === 'earnings' || item.type === 'disclosure') score += 1;
+  
+      // 企業ティッカーが付与されていれば投資判断に寄与
+      if (Array.isArray(item.tickers) && item.tickers.length) score += 1;
+  
+      // 新鮮度寄与（24h以内）
+      if (item.publishedAt && (now.getTime() - item.publishedAt.getTime()) <= 24*60*60*1000) score += 1;
+  
+      // タグが投資・警戒ワードを含む場合
+      const tagText = (item.tags || []).join(' ').toLowerCase() + ' ' + (item.title||'').toLowerCase();
+      if (/警戒|急落|緊急|利下げ|利上げ|サプライズ|速報|決算|下方修正|上方修正|通期/.test(tagText)) score += 1;
+  
+      // スコアを1..5にクランプ
+      return Math.max(1, Math.min(5, score));
+    }catch{
+      return 1;
+    }
+  }
 
   // メタ
   const meta = document.createElement('div');
@@ -304,6 +409,13 @@ function renderCard(item){
     d.dateTime = item.publishedAt.toISOString();
     d.textContent = formatDate(item.publishedAt);
     meta.appendChild(d);
+
+    // 24h以内であればバッジ風の表示
+    const fresh = isWithin24h(item.publishedAt);
+    const freshEl = document.createElement('span');
+    freshEl.className = 'badge';
+    freshEl.textContent = fresh ? '24h以内' : '旧';
+    meta.appendChild(freshEl);
   }
 
   // tickersを軽く表示
@@ -346,5 +458,46 @@ function formatDate(d){
     return new Intl.DateTimeFormat('ja-JP', { year:'numeric', month:'2-digit', day:'2-digit', hour:'2-digit', minute:'2-digit' }).format(d);
   }catch{
     return d.toISOString();
+  }
+}
+
+// 簡易重要度評価ロジック（市場インパクト/投資判断影響度の代替スコア）
+function estimateImportance(item){
+  try{
+    const now = new Date();
+    let score = 1;
+
+    // カテゴリ寄与
+    if (item.category === 'market') score += 1;
+    if (item.category === 'company' && (item.type === 'earnings' || item.type === 'disclosure')) score += 2;
+
+    // 種別の寄与
+    if (item.type === 'macro' || item.type === 'fx' || item.type === 'equityIndex') score += 2;
+    if (item.type === 'earnings' || item.type === 'disclosure') score += 1;
+
+    // 企業ティッカーが付与されていれば投資判断に寄与
+    if (Array.isArray(item.tickers) && item.tickers.length) score += 1;
+
+    // 新鮮度寄与（24h以内）
+    if (item.publishedAt && (now.getTime() - item.publishedAt.getTime()) <= 24*60*60*1000) score += 1;
+
+    // タグが投資・警戒ワードを含む場合
+    const tagText = (item.tags || []).join(' ').toLowerCase() + ' ' + (item.title||'').toLowerCase();
+    if (/警戒|急落|緊急|利下げ|利上げ|サプライズ|速報|決算|下方修正|上方修正|通期/.test(tagText)) score += 1;
+
+    // スコアを1..5にクランプ
+    return Math.max(1, Math.min(5, score));
+  }catch{
+    return 1;
+  }
+}
+
+function isWithin24h(d){
+  try{
+    const now = new Date();
+    const diff = now.getTime() - d.getTime();
+    return diff >= 0 && diff <= 24*60*60*1000;
+  }catch{
+    return false;
   }
 }

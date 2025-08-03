@@ -1,21 +1,23 @@
 :root{
-  --bg: #ffffff;
-  --fg: #1a1a1a;
-  --muted: #6b7280;
-  --accent: #0F62FE;
-  --card: #f8fafc;
-  --border: #e5e7eb;
+  --bg: #0a0f16;          /* ネイビー基調のダーク寄り背景（可読性のためライトでも映える） */
+  --fg: #e6edf3;          /* 前景 */
+  --muted: #9fb0c3;       /* 補助テキスト */
+  --accent: #0F62FE;      /* ブルー（操作色） */
+  --accent-2: #2faa5a;    /* グリーン（良い影響/評価） */
+  --accent-3: #c9a227;    /* ゴールド（重要/ハイライト） */
+  --card: #0f1520;        /* カード */
+  --border: #1f2a37;      /* 枠線 */
   --focus: 0 0 0 3px rgba(15,98,254,0.35);
   --accent-ghost: rgba(15,98,254,.08);
 }
 
 @media (prefers-color-scheme: dark){
   :root{
-    --bg:#0b0f14;
-    --fg:#e5e7eb;
-    --muted:#9aa4b2;
-    --card:#0f1520;
-    --border:#1f2937;
+    --bg:#070b10;
+    --fg:#e6edf3;
+    --muted:#93a3b5;
+    --card:#0c111a;
+    --border:#18212b;
   }
 }
 
@@ -57,12 +59,23 @@ input[type="search"]:focus,select:focus{box-shadow:var(--focus)}
 .card{background:var(--card);border:1px solid var(--border);border-radius:12px;overflow:hidden;display:flex;flex-direction:column;min-height:160px}
 .card-body{padding:12px;display:flex;flex-direction:column;gap:8px}
 .badges{display:flex;gap:6px;flex-wrap:wrap}
-.badge{font-size:12px;background:rgba(15,98,254,.1);color:var(--accent);padding:2px 8px;border-radius:999px;border:1px solid rgba(15,98,254,.2)}
+.badge{
+  font-size:12px;
+  background:rgba(15,98,254,.08);
+  color:var(--accent);
+  padding:2px 8px;
+  border-radius:999px;
+  border:1px solid rgba(15,98,254,.25)
+}
+.badge.impact-high{ background: rgba(201,162,39,.12); color: var(--accent-3); border-color: rgba(201,162,39,.35); }
+.badge.impact-mid{ background: rgba(47,170,90,.12); color: var(--accent-2); border-color: rgba(47,170,90,.35); }
+.badge.impact-low{ background: rgba(156,163,175,.12); color: var(--muted); border-color: rgba(156,163,175,.35); }
+.badge.stars{ background: rgba(201,162,39,.12); color: var(--accent-3); border-color: rgba(201,162,39,.35); }
 .card-title{font-weight:700;line-height:1.4}
 .card-summary{color:var(--muted);font-size:14px}
 .card-meta{display:flex;gap:10px;color:var(--muted);font-size:12px}
 .card-actions{margin-top:auto;padding:12px 14px;border-top:1px solid var(--border);display:flex;justify-content:space-between;align-items:center}
-.button{display:inline-flex;align-items:center;gap:8px;background:var(--accent);color:white;padding:8px 12px;border-radius:8px}
+.button{display:inline-flex;align-items:center;gap:8px;background:linear-gradient(180deg,var(--accent),#0b4ddb);color:white;padding:8px 12px;border-radius:8px}
 .button:hover{text-decoration:none;opacity:.95}
 .extmark{font-size:12px;color:var(--muted)}
 
@@ -71,5 +84,12 @@ input[type="search"]:focus,select:focus{box-shadow:var(--focus)}
 .section-links{display:flex;gap:10px;flex-wrap:wrap}
 .section-links a{font-size:12px}
 .footer-links{display:flex;gap:12px}
+
+/* メトリクスのバッジ色補正（テーマ準拠） */
+.count-badge{
+  background: rgba(47,170,90,.10);
+  border-color: rgba(47,170,90,.35);
+  color: var(--fg);
+}
 
 .empty{color:var(--muted);text-align:center;margin:40px 0}

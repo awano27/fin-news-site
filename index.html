@@ -16,14 +16,14 @@
 <body>
   <header class="site-header">
     <div class="container header-inner">
-      <a class="brand" href="./">
+      <a class="brand" href="./" aria-label="トップへ">
         金融ニュースナビ
       </a>
-      <nav class="nav">
-        <a href="#" data-filter="all" class="nav-link active">すべて</a>
-        <a href="#" data-filter="market" class="nav-link">市場ニュース</a>
-        <a href="#" data-filter="company" class="nav-link">企業ニュース</a>
-        <a href="#" data-filter="sns" class="nav-link">SNS投稿</a>
+      <nav class="nav" aria-label="主要カテゴリ">
+        <a href="#" data-filter="all" class="nav-link active" id="pill-all">すべて</a>
+        <a href="#" data-filter="market" class="nav-link" id="pill-market">市場ニュース</a>
+        <a href="#" data-filter="company" class="nav-link" id="pill-company">企業ニュース</a>
+        <a href="#" data-filter="sns" class="nav-link" id="pill-sns">SNS投稿</a>
       </nav>
       <div class="actions">
         <input id="search" type="search" placeholder="キーワード検索" aria-label="ニュース検索" />
@@ -40,6 +40,25 @@
   <main class="container">
     <section class="notice" role="note" aria-live="polite">
       掲載ルール: 実際にアクセス可能で内容確認済みのソースのみを掲載（整合性100%）
+      <div class="section-links" style="margin-top:6px">
+        <a href="legal/terms.html">利用規約</a>
+        <a href="legal/disclaimer.html">免責事項</a>
+      </div>
+    </section>
+
+    <!-- メトリクス: 24h制約と件数/評価 -->
+    <section class="notice" aria-label="メトリクス">
+      <div style="display:flex;flex-wrap:wrap;gap:10px;align-items:center">
+        <span class="count-badge">市場ニュース: <strong id="metric-market">0</strong></span>
+        <span class="count-badge">企業ニュース: <strong id="metric-company">0</strong></span>
+        <span class="count-badge">SNS投稿: <strong id="metric-sns">0</strong></span>
+        <span class="count-badge">合計: <strong id="metric-total">0</strong></span>
+        <span class="count-badge">総合評価: <strong id="metric-rating">-</strong></span>
+        <label style="margin-left:auto;display:inline-flex;align-items:center;gap:6px">
+          <input id="toggle-24h" type="checkbox" checked />
+          24時間以内のみ表示
+        </label>
+      </div>
     </section>
 
     <!-- 追加: MECEフィルタUI -->
@@ -98,6 +117,7 @@
       const typeSel = document.getElementById('type-filter');
       const issuerSel = document.getElementById('issuer-filter');
       const dedupeCk = document.getElementById('dedupe-toggle');
+      const within24hCk = document.getElementById('toggle-24h');
       window.__NEWS_SET = (patch) => {
         // app.js 側の state を更新するための簡易ブリッジ（後方互換・安全策）
         const ev = new CustomEvent('news:set', { detail: patch });
@@ -106,6 +126,7 @@
       typeSel?.addEventListener('change', () => { window.__NEWS_SET && window.__NEWS_SET({ type: typeSel.value }); });
       issuerSel?.addEventListener('change', () => { window.__NEWS_SET && window.__NEWS_SET({ issuer: issuerSel.value }); });
       dedupeCk?.addEventListener('change', () => { window.__NEWS_SET && window.__NEWS_SET({ dedupe: dedupeCk.checked }); });
+      within24hCk?.addEventListener('change', () => { window.__NEWS_SET && window.__NEWS_SET({ onlyWithin24h: within24hCk.checked }); });
     });
   </script>
   <script>
