@@ -115,7 +115,71 @@
     "locale": "ja",
     "verified": true,
     "thumbnail": ""
-  }
+  },
 
-  
+  {
+    "id": "sns-10",
+    "category": "sns",
+    "title": "国内株式市況のポイント解説",
+    "summary": "本日の日本株の値動きとセクター動向の要点。",
+    "source": "Market Watch JP",
+    "url": "https://example.com/sns/market-watch-jp-2025-08-02",
+    "publishedAt": "2025-08-02T09:00:00+09:00",
+    "tags": ["日本株", "市況"],
+    "locale": "ja",
+    "verified": true,
+    "thumbnail": ""
+  },
+  {
+    "id": "sns-11",
+    "category": "sns",
+    "title": "為替見通し：ドル円・クロス円のリスク",
+    "summary": "イベント前後のボラティリティとシナリオ別の留意点。",
+    "source": "FX Insights",
+    "url": "https://example.com/sns/fx-insights-2025-08-02",
+    "publishedAt": "2025-08-02T08:30:00+09:00",
+    "tags": ["為替", "ドル円"],
+    "locale": "ja",
+    "verified": true,
+    "thumbnail": ""
+  },
+  {
+    "id": "sns-12",
+    "category": "sns",
+    "title": "米国テック決算ダイジェスト",
+    "summary": "主要メガテックの決算ハイライトとガイダンスの要旨。",
+    "source": "US Tech Brief",
+    "url": "https://example.com/sns/us-tech-brief-2025-08-01",
+    "publishedAt": "2025-08-01T22:00:00+09:00",
+    "tags": ["米国株", "テック"],
+    "locale": "ja",
+    "verified": true,
+    "thumbnail": ""
+  },
+  {
+    "id": "sns-13",
+    "category": "sns",
+    "title": "日本の配当利回り銘柄スクリーニング",
+    "summary": "新NISA対応の高配当候補を簡易スクリーニング。",
+    "source": "Dividend Picks",
+    "url": "https://example.com/sns/dividend-picks-2025-08-01",
+    "publishedAt": "2025-08-01T18:00:00+09:00",
+    "tags": ["配当", "NISA"],
+    "locale": "ja",
+    "verified": true,
+    "thumbnail": ""
+  },
+  {
+    "id": "sns-14",
+    "category": "sns",
+    "title": "ビットコインと金利の相関メモ",
+    "summary": "実質金利とBTCの相関推移についての短い考察。",
+    "source": "Crypto Macro Notes",
+    "url": "https://example.com/sns/crypto-macro-2025-08-02",
+    "publishedAt": "2025-08-02T10:15:00+09:00",
+    "tags": ["暗号資産", "マクロ"],
+    "locale": "ja",
+    "verified": true,
+    "thumbnail": ""
+  }
 ]
