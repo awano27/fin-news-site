@@ -1,0 +1,121 @@
+[
+  {
+    "id": "sns-1",
+    "category": "sns",
+    "title": "日本株投資戦略に関する考察",
+    "summary": "",
+    "source": "X: @Heke_Ks",
+    "url": "https://x.com/Heke_Ks/status/1951685215279284268",
+    "publishedAt": "2025-08-02T00:00:00+09:00",
+    "tags": ["日本株", "投資戦略"],
+    "locale": "ja",
+    "verified": true,
+    "thumbnail": ""
+  },
+  {
+    "id": "sns-2",
+    "category": "market",
+    "title": "豪ドル円・NZドル円の展望",
+    "summary": "為替相場の見通しと戦略のポイント。",
+    "source": "外為どっとコム マネ育チャンネル",
+    "url": "https://www.gaitame.com/media/entry/2025/08/02/130000",
+    "publishedAt": "2025-08-02T13:00:00+09:00",
+    "tags": ["為替", "AUD/JPY", "NZD/JPY"],
+    "locale": "ja",
+    "verified": true,
+    "thumbnail": ""
+  },
+  {
+    "id": "sns-3",
+    "category": "market",
+    "title": "ドル円AI予想",
+    "summary": "AIを用いたUSD/JPYの短期予測。",
+    "source": "日経AI予測",
+    "url": "https://nikkeiyosoku.com/usdjpy/forecast/",
+    "publishedAt": "2025-08-02T00:00:00+09:00",
+    "tags": ["為替", "USD/JPY", "AI予測"],
+    "locale": "ja",
+    "verified": true,
+    "thumbnail": ""
+  },
+  {
+    "id": "sns-4",
+    "category": "market",
+    "title": "新NISAで狙う配当株戦略",
+    "summary": "新NISA制度を活用した配当株ポートフォリオ案。",
+    "source": "マネーフォワード",
+    "url": "https://media.moneyforward.com/articles/10145?page=2",
+    "publishedAt": "2025-08-01T00:00:00+09:00",
+    "tags": ["NISA", "配当株", "個人投資家"],
+    "locale": "ja",
+    "verified": true,
+    "thumbnail": ""
+  },
+  {
+    "id": "sns-5",
+    "category": "company",
+    "title": "東洋エンジニアリングの分析",
+    "summary": "業績トレンドと中期見通しのポイント。",
+    "source": "note",
+    "url": "https://note.com/tatsuya_sabato/n/n44ba7c1350aa",
+    "publishedAt": "2025-07-31T00:00:00+09:00",
+    "tags": ["東洋エンジニアリング", "個別株"],
+    "locale": "ja",
+    "verified": true,
+    "thumbnail": ""
+  },
+  {
+    "id": "sns-6",
+    "category": "market",
+    "title": "米雇用統計のAI分析ポータル",
+    "summary": "雇用統計の結果と市場インパクトの要点。",
+    "source": "AI Government Portal",
+    "url": "https://ai-government-portal.com/",
+    "publishedAt": "2025-08-02T00:00:00+09:00",
+    "tags": ["雇用統計", "米国経済", "マクロ"],
+    "locale": "ja",
+    "verified": true,
+    "thumbnail": ""
+  },
+  {
+    "id": "sns-7",
+    "category": "market",
+    "title": "米国株急落の背景分析",
+    "summary": "セクター別の下落要因と今後の焦点。",
+    "source": "TBL Advisory",
+    "url": "https://tbladvisory.com/usdrops/",
+    "publishedAt": "2025-08-02T00:00:00+09:00",
+    "tags": ["米国株", "急落", "相場分析"],
+    "locale": "ja",
+    "verified": true,
+    "thumbnail": ""
+  },
+  {
+    "id": "sns-8",
+    "category": "company",
+    "title": "日本製鉄の事業動向と評価",
+    "summary": "投資判断材料となる直近トピックの整理。",
+    "source": "LIMO",
+    "url": "https://limo.media/articles/-/92497",
+    "publishedAt": "2025-08-02T00:00:00+09:00",
+    "tags": ["日本製鉄", "素材", "個別株"],
+    "locale": "ja",
+    "verified": true,
+    "thumbnail": ""
+  },
+  {
+    "id": "sns-9",
+    "category": "market",
+    "title": "ビットコインの利益供給減少と価格リスク",
+    "summary": "オンチェーン指標からみるBTCのリスク要因。",
+    "source": "BeInCrypto Japan",
+    "url": "https://jp.beincrypto.com/bitcoin-supply-in-profit-drops-price-faces-risk/",
+    "publishedAt": "2025-08-02T00:00:00+09:00",
+    "tags": ["暗号資産", "ビットコイン", "オンチェーン"],
+    "locale": "ja",
+    "verified": true,
+    "thumbnail": ""
+  }
+
+  
+]

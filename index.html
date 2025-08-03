@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>金融ニュースナビ</title>
+  <meta name="description" content="信頼できる金融ニュースを厳選し、カテゴリ別に素早く閲覧できるサイト。市場ニュース・企業ニュース・SNS投稿を横断表示。" />
+  <meta property="og:title" content="金融ニュースナビ" />
+  <meta property="og:description" content="信頼できる金融ニュースを厳選し、カテゴリ別に素早く閲覧。" />
+  <meta property="og:type" content="website" />
+  <meta name="color-scheme" content="light dark" />
+  <link rel="icon" href="data:," />
+  <link rel="preload" href="assets/data/news.json" as="fetch" crossorigin="anonymous" />
+  <link rel="stylesheet" href="assets/styles.css" />
+</head>
+<body>
+  <header class="site-header">
+    <div class="container header-inner">
+      <a class="brand" href="./">
+        金融ニュースナビ
+      </a>
+      <nav class="nav">
+        <a href="#" data-filter="all" class="nav-link active">すべて</a>
+        <a href="#" data-filter="market" class="nav-link">市場ニュース</a>
+        <a href="#" data-filter="company" class="nav-link">企業ニュース</a>
+        <a href="#" data-filter="sns" class="nav-link">SNS投稿</a>
+      </nav>
+      <div class="actions">
+        <input id="search" type="search" placeholder="キーワード検索" aria-label="ニュース検索" />
+        <select id="sort" aria-label="並び替え">
+          <option value="date_desc">新しい順</option>
+          <option value="date_asc">古い順</option>
+          <option value="title_asc">タイトル昇順</option>
+          <option value="title_desc">タイトル降順</option>
+        </select>
+      </div>
+    </div>
+  </header>
+
+  <main class="container">
+    <section class="notice" role="note" aria-live="polite">
+      掲載ルール: 実際にアクセス可能で内容確認済みのソースのみを掲載（整合性100%）
+    </section>
+
+    <section id="cards" class="cards" aria-label="ニュース一覧">
+      <!-- JSでカードを描画 -->
+    </section>
+
+    <section class="empty" id="empty" hidden>
+      該当するニュースが見つかりません。
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <div class="container footer-inner">
+      <small>© 2025 金融ニュースナビ</small>
+      <div class="footer-links">
+        <a href="legal/terms.html">利用規約</a>
+        <a href="legal/disclaimer.html">免責事項</a>
+      </div>
+    </div>
+  </footer>
+
+  <script src="assets/app.js" type="module"></script>
+</body>
+</html>
