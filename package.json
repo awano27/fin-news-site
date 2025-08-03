@@ -1,0 +1,17 @@
+{
+  "name": "fin-news-site",
+  "version": "1.0.0",
+  "private": true,
+  "description": "金融ニュースサイト - 静的サイト + Playwright補助スクリプト",
+  "scripts": {
+    "pw:install": "playwright install",
+    "pw:login": "ts-node --transpile-only scripts/x/login.ts",
+    "pw:login:state": "PW_STORAGE_STATE_PATH=scripts/x/storageState.json ts-node --transpile-only scripts/x/login.ts"
+  },
+  "devDependencies": {
+    "@types/node": "^20.14.10",
+    "playwright": "^1.45.0",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.5.4"
+  }
+}
