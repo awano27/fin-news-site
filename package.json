@@ -6,8 +6,10 @@
   "scripts": {
     "pw:install": "playwright install",
     "pw:login": "ts-node --transpile-only scripts/x/login.ts",
-    "pw:login:state": "PW_STORAGE_STATE_PATH=scripts/x/storageState.json ts-node --transpile-only scripts/x/login.ts",
-    "tdnet:fetch": "ts-node --transpile-only scripts/tdnet/fetch-tdnet.ts"
+    "pw:login:state": "set PW_STORAGE_STATE_PATH=scripts/x/storageState.json&& ts-node --transpile-only scripts/x/login.ts",
+    "tdnet:fetch": "ts-node --transpile-only scripts/tdnet/fetch-tdnet.ts",
+    "x:fetch": "set PW_STORAGE_STATE_PATH=scripts/x/storageState.json&& ts-node --transpile-only scripts/x/fetch-top.ts",
+    "press:fetch": "ts-node --transpile-only scripts/news/fetch-press.ts"
   },
   "devDependencies": {
     "@types/node": "^20.14.10",

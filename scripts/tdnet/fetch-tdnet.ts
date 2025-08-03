@@ -93,62 +93,81 @@ function calcNextIdStart(items: any[]): number {
 
 /**
  * TDnet（適時開示）から銘柄コード別に最新 N 件取得
- * 備考: 公式サイト構造は変更される可能性があるため、セレクタは冗長にし過ぎない
+ * 改良: 実際にフォーム検索を行い、結果テーブルから厳密に抽出
  */
 async function fetchTdnetByCode(page: import('playwright').Page, code: string, limit: number): Promise<NewsItem[]> {
-  // JPX TDnet 検索ページ（コードで絞り込み、直近順）
-  // 参考URL（将来変更の可能性あり）。構造変わった場合は適宜修正。
-  const base = 'https://www.release.tdnet.info/inbs/I_list_001_001.html'; // 一覧トップ
+  const base = 'https://www.release.tdnet.info/inbs/I_list_001_001.html';
   await page.goto(base, { waitUntil: 'domcontentloaded' });
 
-  // 画面内の検索UIがある場合にコード入力 → 検索。なければ銘柄別ページ探索に切替。
-  // 汎用方針: コードテキストを含む行カードを抽出し、上位リンクから詳細へ
-  // セレクタは変更されやすいので、まず記事テーブルを広く取る
   const results: NewsItem[] = [];
 
-  // 直接検索クエリでのコードページ（フォールバック用）。非公開時は失敗可。
-  // 代替: TDnetのJSON/CSVなどは利用せずスクレイプのみ
-  try {
-    // サイト構造によってはクエリ付きURLに飛ばす方式のほうが安定することがある
-    // 例: 仮のパラメータ構造（実環境に合わせて変更が必要）
-    // 実際にはサイトのフォームで submit して結果に遷移する実装が望ましい。
-    await page.goto(`https://www.release.tdnet.info/inbs/I_list_001_001.html?code=${encodeURIComponent(code)}`, { waitUntil: 'domcontentloaded' });
-  } catch {}
+  // 1) 可能なら検索フォームへ入力して実行（セレクタは変化しやすいので複数候補）
+  const inputSelCandidates = ['input[name="code"]', 'input#code', 'input[type="search"]', 'form input[type="text"]'];
+  let filled = false;
+  for (const sel of inputSelCandidates) {
+    const exists = await page.locator(sel).first().count();
+    if (exists > 0) {
+      await page.fill(sel, code);
+      filled = true;
+      break;
+    }
+  }
+  if (filled) {
+    // 検索ボタン候補
+    const btnSelCandidates = ['button[type="submit"]', 'input[type="submit"]', 'button:has-text("検索")', 'button:has-text("Search")'];
+    let clicked = false;
+    for (const bsel of btnSelCandidates) {
+      const count = await page.locator(bsel).first().count();
+      if (count > 0) {
+        await page.locator(bsel).first().click();
+        clicked = true;
+        break;
+      }
+    }
+    if (clicked) {
+      await page.waitForLoadState('domcontentloaded', { timeout: 10000 }).catch(()=>{});
+    }
+  } else {
+    // フォームが見当たらない場合はクエリ付きURLでフォールバック
+    await page.goto(`https://www.release.tdnet.info/inbs/I_list_001_001.html?code=${encodeURIComponent(code)}`, { waitUntil: 'domcontentloaded' }).catch(()=>{});
+  }
 
-  // article/行っぽい要素を広めに取得
-  const rows = await page.locator('table, .list, .result, article, .news, .table').first().locator('a').elementHandles();
+  // 2) 結果テーブルから行を抽出（複数の候補セレクタを順番に試す）
+  const tableCandidates = [
+    'table#result', 'table.list', 'table', '.result table', '.list table', 'article table'
+  ];
+  let rowHandles: import('playwright').ElementHandle[] = [];
+  for (const tsel of tableCandidates) {
+    const table = page.locator(tsel).first();
+    if (await table.count() > 0) {
+      rowHandles = await table.locator('tr').elementHandles();
+      if (rowHandles.length > 0) break;
+    }
+  }
 
-  for (const a of rows) {
+  // 3) 行から a と日付を取り出して整形
+  for (const tr of rowHandles) {
     if (results.length >= limit) break;
 
-    const href = await a.getAttribute('href');
-    const text = ((await a.textContent()) || '').trim();
-    if (!href || !text) continue;
+    const linkHandle = await tr.$('a[href]');
+    if (!linkHandle) continue;
+    const href = await linkHandle.getAttribute('href');
+    const titleRaw = (await linkHandle.textContent()) || '';
+    if (!href || !titleRaw.trim()) continue;
 
-    // 公開日時が近傍にある場合も多いが、まずはリンク先から拾う
     const url = toAbs(page.url(), href);
-    if (!/^(https?:)?\/\//.test(url)) continue;
+    if (!/^https?:\/\//.test(url)) continue;
 
-    // タイトルから不要な空白の正規化
-    const title = clip(text, 120);
-
-    // 詳細ページで日時を拾う（重い場合はスキップして一覧の近傍テキストから拾う）
+    // 近傍の日時セルを探索
     let publishedAt: string | null = null;
-    try {
-      const p2 = await page.context().newPage();
-      await p2.goto(url, { waitUntil: 'domcontentloaded' });
-      // timeタグ、または「公開日時」「提出日」などの近傍テキストを探索
-      const timeEl = await p2.locator('time, .time, .date, .datetime, [datetime]').first();
-      const have = await timeEl.count();
-      if (have > 0) {
-        const dt = (await timeEl.getAttribute('datetime')) || (await timeEl.textContent()) || '';
-        const iso = toISO(dt);
-        if (iso) publishedAt = iso;
-      }
-      await p2.close();
-    } catch {
-      // 無視して続行
+    const dateCell = await tr.$('td:has-text("202") , td:has-text("2024"), td:has-text("2025"), td[class*="date"], td[headers*="date"]');
+    if (dateCell) {
+      const dtRaw = ((await dateCell.textContent()) || '').trim();
+      const iso = toISO(dtRaw);
+      if (iso) publishedAt = iso;
     }
+
+    const title = clip(titleRaw, 120);
 
     results.push({
       id: 'company-0',
@@ -167,7 +186,36 @@ async function fetchTdnetByCode(page: import('playwright').Page, code: string, l
     });
   }
 
-  // URL重複削除
+  // 4) フォールバック（テーブルが取れない場合は広めの a 抽出→同ページ内の候補のみ）
+  if (results.length === 0) {
+    const anchors = await page.locator('a[href]').elementHandles();
+    for (const a of anchors) {
+      if (results.length >= limit) break;
+      const href = await a.getAttribute('href');
+      const text = ((await a.textContent()) || '').trim();
+      if (!href || !text) continue;
+      const abs = toAbs(page.url(), href);
+      // TDnetの詳細ページらしいURLに限定（ヒューリスティック）
+      if (!/\/inbs\/.+/i.test(abs)) continue;
+
+      results.push({
+        id: 'company-0',
+        category: 'company',
+        title: clip(text, 120),
+        summary: '',
+        source: `TDnet ${code}`,
+        url: abs,
+        publishedAt: null,
+        tags: [],
+        locale: 'ja',
+        verified: true,
+        thumbnail: '',
+        type: 'disclosure',
+        tickers: [`${code}.T`]
+      });
+    }
+  }
+
   const uniq = uniqBy(results, r => r.url);
   console.log(`TDnet ${code}: 抽出 ${uniq.length} 件`);
   return uniq.slice(0, limit);
