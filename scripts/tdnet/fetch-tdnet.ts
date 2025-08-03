@@ -251,16 +251,34 @@ function toISO(raw: string): string | null {
   // すでにISOっぽい
   const isoTry = new Date(s);
   if (!isNaN(+isoTry)) return isoTry.toISOString();
-  // yyyy/mm/dd hh:mm などを簡易パース
-  const m = s.match(/(\d{4})[\/\-\.](\d{1,2})[\/\-\.](\d{1,2})(?:\s+(\d{1,2}):(\d{2}))?/);
-  if (m) {
-    const y = parseInt(m[1], 10);
-    const mo = parseInt(m[2], 10) - 1;
-    const d = parseInt(m[3], 10);
-    const hh = m[4] ? parseInt(m[4], 10) : 0;
-    const mm = m[5] ? parseInt(m[5], 10) : 0;
-    const dt = new Date(y, mo, d, hh, mm);
-    if (!isNaN(+dt)) return dt.toISOString();
+  // 日本的な日付フォーマットをより幅広いパターンで対応
+  const patterns = [
+    /(\d{4})[\/\-\.](\d{1,2})[\/\-\.](\d{1,2})(?:[\sT]+(\d{1,2}):(\d{2})(?::(\d{2}))?)?/, // 2024/01/01 12:34:56
+    /(\d{4})年(\d{1,2})月(\d{1,2})日(?:[\s]+(\d{1,2})時(\d{2})分)?/, // 2024年1月1日 12時34分
+    /(\d{1,2})\/(\d{1,2})\/(\d{4})(?:[\s]+(\d{1,2}):(\d{2}))?/, // 01/01/2024 12:34
+  ];
+  
+  for (const pattern of patterns) {
+    const m = s.match(pattern);
+    if (m) {
+      let y, mo, d, hh = 0, mm = 0, ss = 0;
+      if (pattern === patterns[0] || pattern === patterns[1]) {
+        y = parseInt(m[1], 10);
+        mo = parseInt(m[2], 10) - 1;
+        d = parseInt(m[3], 10);
+        hh = m[4] ? parseInt(m[4], 10) : 0;
+        mm = m[5] ? parseInt(m[5], 10) : 0;
+        ss = m[6] ? parseInt(m[6], 10) : 0;
+      } else if (pattern === patterns[2]) {
+        y = parseInt(m[3], 10);
+        mo = parseInt(m[1], 10) - 1;
+        d = parseInt(m[2], 10);
+        hh = m[4] ? parseInt(m[4], 10) : 0;
+        mm = m[5] ? parseInt(m[5], 10) : 0;
+      }
+      const dt = new Date(y, mo, d, hh, mm, ss);
+      if (!isNaN(+dt)) return dt.toISOString();
+    }
   }
   return null;
 }

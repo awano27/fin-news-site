@@ -1,0 +1,9 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(uvx:*)",
+      "WebFetch(domain:awano27.github.io)"
+    ],
+    "deny": []
+  }
+}

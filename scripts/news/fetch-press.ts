@@ -275,16 +275,21 @@ function toISO(raw?: string | null): string | null {
 
 function guessCategory(source: string, title: string, href: string): 'market' | 'company' {
   const t = (title + ' ' + href).toLowerCase();
-  if (/決算|業績|上方修正|下方修正|人事|m&a|買収|合併|子会社|提携|出資|上場/.test(t)) return 'company';
+  if (/決算|業績|上方修正|下方修正|人事|m&a|買収|合併|子会社|提携|出資|上場|株価|配当|新製品|新サービス/.test(t)) return 'company';
   return 'market';
+}
+
+function looksCompany(title: string, url: string): boolean {
+  const text = (title + ' ' + url).toLowerCase();
+  return /決算|業績|上方修正|下方修正|人事|m&a|買収|合併|子会社|提携|出資|上場|株価|配当|新製品|新サービス/.test(text);
 }
 
 function guessType(title: string, href: string): string | undefined {
   const t = (title + ' ' + href).toLowerCase();
-  if (/cpi|pmi|gdp|景気|マクロ|統計|政策|fomc|日銀|利下げ|利上げ/.test(t)) return 'macro';
-  if (/決算|業績|通期|四半期|開示|ir|短信|有報/.test(t)) return 'disclosure';
-  if (/為替|ドル円|usd\/jpy|fx/.test(t)) return 'fx';
-  if (/指数|日経平均|sp500|topix|先物|オプション/.test(t)) return 'equityIndex';
+  if (/cpi|pmi|gdp|景気|マクロ|統計|政策|fomc|日銀|利下げ|利上げ|物価|インフレ|失業率/.test(t)) return 'macro';
+  if (/決算|業績|通期|四半期|開示|ir|短信|有報|買収|合併/.test(t)) return 'disclosure';
+  if (/為替|ドル円|usd\/jpy|fx|通貨|ユーロ|ポンド/.test(t)) return 'fx';
+  if (/指数|日経平均|sp500|topix|先物|オプション|ナスダック|ダウ/.test(t)) return 'equityIndex';
   return undefined;
 }
 

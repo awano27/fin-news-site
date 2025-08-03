@@ -20,10 +20,10 @@
         金融ニュースナビ
       </a>
       <nav class="nav" aria-label="主要カテゴリ">
-        <a href="#" data-filter="all" class="nav-link active" id="pill-all">すべて</a>
-        <a href="#" data-filter="market" class="nav-link" id="pill-market">市場ニュース</a>
-        <a href="#" data-filter="company" class="nav-link" id="pill-company">企業ニュース</a>
-        <a href="#" data-filter="sns" class="nav-link" id="pill-sns">SNS投稿</a>
+        <a href="#" data-filter="all" class="nav-link active" id="pill-all">📈 全ニュース</a>
+        <a href="#" data-filter="market" class="nav-link" id="pill-market">🌐 市場・経済</a>
+        <a href="#" data-filter="company" class="nav-link" id="pill-company">🏢 企業・決算</a>
+        <a href="#" data-filter="sns" class="nav-link" id="pill-sns">💬 SNS速報</a>
       </nav>
       <div class="actions">
         <input id="search" type="search" placeholder="キーワード検索" aria-label="ニュース検索" />
@@ -46,49 +46,74 @@
       </div>
     </section>
 
-    <!-- メトリクス: 24h制約と件数/評価 -->
-    <section class="notice" aria-label="メトリクス">
-      <div style="display:flex;flex-wrap:wrap;gap:10px;align-items:center">
-        <span class="count-badge">市場ニュース: <strong id="metric-market">0</strong></span>
-        <span class="count-badge">企業ニュース: <strong id="metric-company">0</strong></span>
-        <span class="count-badge">SNS投稿: <strong id="metric-sns">0</strong></span>
-        <span class="count-badge">合計: <strong id="metric-total">0</strong></span>
-        <span class="count-badge">総合評価: <strong id="metric-rating">-</strong></span>
-        <label style="margin-left:auto;display:inline-flex;align-items:center;gap:6px">
+    <!-- 統計とフィルタオプション -->
+    <section class="notice stats-section" aria-label="統計情報">
+      <div class="stats-grid">
+        <div class="stat-item">
+          <span class="stat-label">🌐 市場ニュース</span>
+          <span class="stat-value" id="metric-market">0</span>
+        </div>
+        <div class="stat-item">
+          <span class="stat-label">🏢 企業ニュース</span>
+          <span class="stat-value" id="metric-company">0</span>
+        </div>
+        <div class="stat-item">
+          <span class="stat-label">💬 SNS投稿</span>
+          <span class="stat-value" id="metric-sns">0</span>
+        </div>
+        <div class="stat-item total">
+          <span class="stat-label">📊 合計</span>
+          <span class="stat-value" id="metric-total">0</span>
+        </div>
+        <div class="stat-item rating">
+          <span class="stat-label">⭐ 情報充実度</span>
+          <span class="stat-value" id="metric-rating">-</span>
+        </div>
+      </div>
+      <div class="time-filter">
+        <label class="time-filter-label">
           <input id="toggle-24h" type="checkbox" checked />
-          24時間以内のみ表示
+          ⏰ 24時間以内の最新ニュースのみ表示
         </label>
       </div>
     </section>
 
-    <!-- 追加: MECEフィルタUI -->
-    <section class="notice" aria-label="MECEフィルタ">
-      <form id="mece-filters" style="display:flex;flex-wrap:wrap;gap:8px;align-items:center">
-        <label>
-          種別:
-          <select id="type-filter">
-            <option value="all">すべて</option>
-            <option value="earnings">earnings（決算）</option>
-            <option value="disclosure">disclosure（開示/IR）</option>
-            <option value="fx">fx（為替）</option>
-            <option value="macro">macro（マクロ/指標/政策）</option>
-            <option value="equityIndex">equityIndex（株価指数）</option>
-            <option value="companyNews">companyNews（企業系）</option>
-            <option value="marketNews">marketNews（市場系）</option>
-          </select>
-        </label>
-        <label>
-          発行体:
-          <select id="issuer-filter">
-            <option value="all">すべて</option>
-            <option value="withIssuer">企業固有</option>
-            <option value="noIssuer">市場/マクロ</option>
-          </select>
-        </label>
-        <label style="display:inline-flex;align-items:center;gap:6px">
-          <input id="dedupe-toggle" type="checkbox" checked />
-          重複抑止
-        </label>
+    <!-- 詳細フィルタ -->
+    <section class="notice filter-section" aria-label="詳細フィルタ">
+      <div class="filter-header">
+        <h3>🔍 詳細フィルタ</h3>
+        <button id="filter-toggle" class="filter-toggle">表示/非表示</button>
+      </div>
+      <form id="mece-filters" class="filter-form" style="display:none">
+        <div class="filter-group">
+          <label class="filter-label">
+            📊 ニュース種別:
+            <select id="type-filter" class="filter-select">
+              <option value="all">すべて</option>
+              <option value="earnings">📈 決算発表</option>
+              <option value="disclosure">📋 適時開示・IR</option>
+              <option value="fx">💱 為替・通貨</option>
+              <option value="macro">🌍 経済指標・政策</option>
+              <option value="equityIndex">📊 株価指数</option>
+              <option value="companyNews">🏢 企業ニュース</option>
+              <option value="marketNews">📈 市場ニュース</option>
+            </select>
+          </label>
+          <label class="filter-label">
+            🎯 対象範囲:
+            <select id="issuer-filter" class="filter-select">
+              <option value="all">すべて</option>
+              <option value="withIssuer">🏢 特定企業</option>
+              <option value="noIssuer">🌐 市場全般</option>
+            </select>
+          </label>
+        </div>
+        <div class="filter-options">
+          <label class="filter-checkbox">
+            <input id="dedupe-toggle" type="checkbox" checked />
+            🔄 重複記事を除外
+          </label>
+        </div>
       </form>
     </section>
 
@@ -97,7 +122,11 @@
     </section>
 
     <section class="empty" id="empty" hidden>
-      該当するニュースが見つかりません。
+      <div style="text-align: center; padding: 40px; color: var(--muted);">
+        <div style="font-size: 48px; margin-bottom: 16px;">🔍</div>
+        <h3>該当するニュースが見つかりません</h3>
+        <p>フィルタ条件を変更するか、24時間フィルタを無効にしてお試しください。</p>
+      </div>
     </section>
   </main>
 
@@ -118,6 +147,16 @@
       const issuerSel = document.getElementById('issuer-filter');
       const dedupeCk = document.getElementById('dedupe-toggle');
       const within24hCk = document.getElementById('toggle-24h');
+      const filterToggle = document.getElementById('filter-toggle');
+      const filterForm = document.getElementById('mece-filters');
+      
+      // 詳細フィルタの表示/非表示
+      filterToggle?.addEventListener('click', () => {
+        const isHidden = filterForm.style.display === 'none';
+        filterForm.style.display = isHidden ? 'flex' : 'none';
+        filterToggle.textContent = isHidden ? '非表示' : '表示';
+      });
+      
       window.__NEWS_SET = (patch) => {
         // app.js 側の state を更新するための簡易ブリッジ（後方互換・安全策）
         const ev = new CustomEvent('news:set', { detail: patch });

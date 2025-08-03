@@ -164,8 +164,15 @@ async function fetchFromAccount(page: Page, handle: string, limit: number): Prom
     if (!href) continue;
 
     const absoluteUrl = toAbsoluteUrl('https://x.com', href);
-    const title = clipTitle(text, 80);
-    const summary = clipSummary(text, 160);
+    
+    // 金融関連キーワードのフィルタリング（関連性の高い投稿のみ収集）
+    const isFinanceRelated = /決算|業績|株価|為替|日経|ドル円|日銀|政策|金利|投資|経済|GDP|CPI|上場|下落|上昇|急落|急伸|銀行|企業|市場|マーケット|トレーディング|アナリスト|予想|サプライズ|速報|緊急|警告|注意/.test(text.toLowerCase());
+    // アカウントが既に金融系の場合はフィルタを緩める
+    const isFinanceAccount = /@(nikkei|reuters|bloomberg|gaitame|quick|nhk_news|monex|rakuten|sbi|kabutan|minkabu|yol_economy)/i.test(handle);
+    if (!isFinanceRelated && !isFinanceAccount) continue;
+    
+    const title = clipTitle(text, 100);
+    const summary = clipSummary(text, 200);
 
     const publishedAt = await extractPublishedTime(a).catch(() => null);
 

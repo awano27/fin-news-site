@@ -9,7 +9,10 @@
     "pw:login:state": "set PW_STORAGE_STATE_PATH=scripts/x/storageState.json&& ts-node --transpile-only scripts/x/login.ts",
     "tdnet:fetch": "ts-node --transpile-only scripts/tdnet/fetch-tdnet.ts",
     "x:fetch": "set PW_STORAGE_STATE_PATH=scripts/x/storageState.json&& ts-node --transpile-only scripts/x/fetch-top.ts",
-    "press:fetch": "ts-node --transpile-only scripts/news/fetch-press.ts"
+    "press:fetch": "ts-node --transpile-only scripts/news/fetch-press.ts",
+    "news:update": "npm run press:fetch && npm run tdnet:fetch && npm run x:fetch",
+    "serve": "python -m http.server 8000 --bind 127.0.0.1",
+    "dev": "npm run news:update && npm run serve"
   },
   "devDependencies": {
     "@types/node": "^20.14.10",
