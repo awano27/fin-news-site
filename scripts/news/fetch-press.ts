@@ -18,16 +18,30 @@ type PressItem = {
   tickers?: string[];   // 例: ["7203.T"]
 };
 
-// 収集対象（最初の実装はトップ/マーケット/日本株など汎用セレクタで抜き出す）
+// 収集対象（企業タブ強化のため、企業ページやビジネス/企業カテゴリに寄せるURLを追加）
 const TARGETS = [
-  { name: 'Reuters Japan', base: 'https://jp.reuters.com/', pages: ['https://jp.reuters.com/'] },
-  { name: 'Nikkei', base: 'https://www.nikkei.com/', pages: ['https://www.nikkei.com/'] },
-  { name: 'Bloomberg Japan', base: 'https://www.bloomberg.co.jp/', pages: ['https://www.bloomberg.co.jp/'] },
+  { name: 'Reuters Japan', base: 'https://jp.reuters.com', pages: [
+      'https://jp.reuters.com/companies',     // 企業
+      'https://jp.reuters.com/business',      // ビジネス
+      'https://jp.reuters.com/markets',       // マーケット（補助）
+    ]},
+  { name: 'Nikkei', base: 'https://www.nikkei.com', pages: [
+      'https://www.nikkei.com/business/',     // 企業・ビジネス
+      'https://www.nikkei.com/markets/',      // マーケット（補助）
+    ]},
+  { name: 'Bloomberg Japan', base: 'https://www.bloomberg.co.jp', pages: [
+      'https://www.bloomberg.co.jp/companies', // 企業（相当カテゴリがあれば）
+      'https://www.bloomberg.co.jp/bloomberg', // トップ（補助）
+      'https://www.bloomberg.co.jp/markets'    // マーケット（補助）
+    ]},
 ];
 
 const NEWS_JSON = 'assets/data/news.json';
-const PER_SITE_LIMIT = parseInt(process.env.PRESS_PER_SITE_LIMIT || '10', 10);
-const GLOBAL_LIMIT = parseInt(process.env.PRESS_GLOBAL_LIMIT || '50', 10);
+const PER_SITE_LIMIT = parseInt(process.env.PRESS_PER_SITE_LIMIT || '12', 10);
+const GLOBAL_LIMIT = parseInt(process.env.PRESS_GLOBAL_LIMIT || '60', 10);
+
+// 企業タブの最低追加件数（なければ企業寄りに補正）
+const MIN_COMPANY_ITEMS = parseInt(process.env.MIN_COMPANY_ITEMS || '6', 10);
 
 async function main() {
   assertExists(NEWS_JSON, `news.json が見つかりません: ${NEWS_JSON}`);
@@ -58,13 +72,28 @@ async function main() {
   }
 
   // 24hで絞る（サイト側で時刻不明の場合は除外）
-  const within24h = collected.filter(it => {
+  let within24h = collected.filter(it => {
     if (!it.publishedAt) return false;
     const d = new Date(it.publishedAt);
     if (Number.isNaN(+d)) return false;
     const diff = Date.now() - d.getTime();
     return diff >= 0 && diff <= 24 * 60 * 60 * 1000;
   });
+
+  // 企業タブ不足時の補正: company件数が少なければ、marketのうち企業っぽいものを company へ昇格
+  const companyCount = within24h.filter(x => x.category === 'company').length;
+  if (companyCount < MIN_COMPANY_ITEMS) {
+    const deficit = MIN_COMPANY_ITEMS - companyCount;
+    let promoted = 0;
+    within24h = within24h.map(x => {
+      if (promoted >= deficit) return x;
+      if (x.category === 'market' && looksCompany(x.title, x.url)) {
+        promoted++;
+        return { ...x, category: 'company', type: x.type || 'disclosure' };
+      }
+      return x;
+    });
+  }
 
   if (within24h.length === 0) {
     console.log('press: 24時間以内の記事が見つかりませんでした。');
@@ -93,7 +122,8 @@ async function main() {
 
   const merged = existing.concat(toAppend);
   fs.writeFileSync(NEWS_JSON, JSON.stringify(merged, null, 2), 'utf-8');
-  console.log(`press: news.json に ${toAppend.length} 件を追記しました。`);
+  const compAdded = toAppend.filter(x => x.category === 'company').length;
+  console.log(`press: news.json に ${toAppend.length} 件を追記しました。（うち企業カテゴリ ${compAdded} 件）`);
 }
 
 function assertExists(p: string, msg?: string) {
